@@ -8,3 +8,12 @@ type Request struct {
 type ProcessResult struct {
 	Items []interface{}
 }
+
+type AwsConfig struct {
+	Stream          string
+	Region          string
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	SessionToken    string
+}
