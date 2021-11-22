@@ -9,26 +9,19 @@ type ConcurrentEngine struct {
 	WorkerCount int
 }
 
-type Scheduler interface {
-	Submit(Request)
-	ConfigureMasterWorkerChan(chan Request)
-}
-
-func (e *ConcurrentEngine) Run(seeds ...Request) {
-	in := make(chan Request)
+func (e *ConcurrentEngine) Run(request Request) {
 	out := make(chan ProcessResult)
-	e.Scheduler.ConfigureMasterWorkerChan(in)
-
-	for _, r := range seeds {
-		e.Scheduler.Submit(r)
-	}
+	// Start the scheduler, init those two chan.
+	e.Scheduler.Run()
 
 	for i := 0; i < e.WorkerCount; i++ {
-		createWorker(in, out)
+		createWorker(e.Scheduler.WorkerChan(), out, e.Scheduler)
 	}
 
-	itemCount := 0
+	e.Scheduler.Submit(request)
+
 	for {
+		itemCount := 0
 		result := <-out
 
 		for _, item := range result.Items {
@@ -36,18 +29,21 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 			// todo: add items into pool to send to ES.
 			itemCount++
 		}
+		log.Printf("Got %v item(s) in total", itemCount)
+		e.Scheduler.Submit(request)
 	}
 }
 
-func createWorker(in chan Request, out chan ProcessResult) {
+func createWorker(in chan Request, out chan ProcessResult, ready ReadyNotifier) {
 	go func() {
 		for {
-			request := <-in
+			// tell scheduler this worker is ready.
+			ready.WorkerReady(in)
+			request := <-in // Scheduler choose this worker, then send request.
 			result, err := worker(request)
 			if err != nil {
 				continue
 			}
-
 			out <- result
 		}
 	}()

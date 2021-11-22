@@ -7,12 +7,9 @@ import (
 )
 
 func worker(r Request) (ProcessResult, error) {
-
-	awsConfig := AwsConfig{}
-
-	contents, err := fetcher.Fetch(awsConfig)
+	contents, err := fetcher.Fetch()
 	if err != nil {
-		log.Printf("Fetcher: error fetching from stream %s: %v", r.StreamName, err)
+		log.Printf("Fetcher: error fetching event: %v", err)
 		time.Sleep(1000)
 		return ProcessResult{}, err
 	}

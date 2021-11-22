@@ -5,17 +5,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"go_kinesis_es_project/models"
+	"go_kinesis_es_project/fetcher/models"
 	"log"
+	"os"
 )
 
-func Fetch(awsConfig models.AwsConfig) ([][]byte, error) {
+func Fetch() ([][]byte, error) {
+	awsConfig := models.AwsConfig{
+		Stream:          os.Getenv("KINESIS_STREAM_NAME"),
+		Region:          os.Getenv("KINESIS_REGION"),
+		Endpoint:        os.Getenv("AWS_ENDPOINT"),
+		AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		SessionToken:    os.Getenv("AWS_SESSION_TOKEN"),
+	}
+
 	// connect to aws config kinesis
 	s := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String(awsConfig.Region),
 		Endpoint:    aws.String(awsConfig.Endpoint),
 		Credentials: credentials.NewStaticCredentials(awsConfig.AccessKeyID, awsConfig.SecretAccessKey, awsConfig.SessionToken),
 	}))
+
+
 	kc := kinesis.New(s)
 	streamName := aws.String(awsConfig.Stream)
 	streams, err := kc.DescribeStream(&kinesis.DescribeStreamInput{StreamName: streamName})
