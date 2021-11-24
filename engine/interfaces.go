@@ -1,5 +1,9 @@
 package engine
 
+import (
+	"go_kinesis_es_project/fetcher/models"
+)
+
 type Scheduler interface {
 	ReadyNotifier
 	Submit(Request)
@@ -9,4 +13,9 @@ type Scheduler interface {
 
 type ReadyNotifier interface {
 	WorkerReady(chan Request)
+}
+
+type EventBusFetcher interface {
+	Fetch(*models.AwsConfig) ([][]byte, error)
+	Run(chan Request)
 }

@@ -1,7 +1,8 @@
 package engine
 
 type Request struct {
-	Processor  func([][]byte) (ProcessResult, error)
+	Processor func([]byte) (ProcessResult, error)
+	Contents  []byte
 }
 
 type ProcessResult struct {
